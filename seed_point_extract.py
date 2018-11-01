@@ -5,11 +5,13 @@
 # @Software: PyCharm
 
 
+import random
+
 import numpy as np
 from scipy.signal import argrelextrema
-import random
+
 import point_and_seed as ps
-from matplotlib import pyplot as plt
+import save_data
 
 
 def hist(im_data):
@@ -45,20 +47,31 @@ def wavelet_hist(im_data):
     return d
 
 
-def seed_extract(dic):
+def seed_extract(im_data):
+    dic = hist(im_data)
     seed_list = list()
     count_array = np.zeros(len(dic))
-    # print min(dic.keys())
-    plt.figure("hist")
     for i in range(len(dic)):
-        # print dic[i-min(dic.keys())]
         count_array[i] = len(dic[i + min(dic.keys())])
-        plt.bar(i + min(dic.keys()), count_array[i], fc='b')
-    plt.show()
+    less_extrema = np.array([])
+    less_extrema = np.append(less_extrema, np.array(argrelextrema(count_array, np.less, order=50)))
+    greater_extrema = np.array([])
+    greater_extrema = np.append(greater_extrema, np.array(argrelextrema(count_array, np.greater, order=50)))
+    less_extrema = less_extrema + min(dic.keys())
+    greater_extrema = greater_extrema + min(dic.keys())
+    # save_data.write_txt("min",less_extrema + min(dic.keys()))
+    # save_data.write_txt("max",greater_extrema + min(dic.keys()))
 
-
+    # print "#############开始画图"
+    # plt.figure("hist")
+    # for i in range(len(count_array)):
+    #     plt.bar(i+ min(dic.keys()),count_array[i], fc='b')
+    # for i in range(len(less_extrema)):
+    #     plt.plot(less_extrema[i]+ min(dic.keys()), len(dic[less_extrema[i]+min(dic.keys())]), 'r.')
+    # for i in range(len(greater_extrema)):
+    #     plt.plot(greater_extrema[i]+ min(dic.keys()), len(dic[greater_extrema[i]+min(dic.keys())]), 'g.')
+    # plt.show()
     # # 直方图局部最小值所处的像素值
-    # less_extrema = np.array([])
     # less_extrema = np.append(less_extrema, np.array(argrelextrema(count_array[0:140], np.less, order=6)))
     # less_extrema = np.append(less_extrema, np.array(argrelextrema(count_array[140:180], np.less, order=4)) + 140)
     # less_extrema = np.append(less_extrema, np.array(argrelextrema(count_array[180:], np.less, order=6)) + 180)
@@ -81,21 +94,30 @@ def seed_extract(dic):
     # # plt.show()
     # ##################################
     #
-    # index = 0
-    # last_seed_lower = 0
-    # for j in range(greater_extrema.size):
-    #     for i in range(less_extrema.size-1):
-    #         if greater_extrema[j] < less_extrema[i]:
-    #             break
-    #         if less_extrema[i] < greater_extrema[j] < less_extrema[i+1]:
-    #             index += 1
-    #             seed_total = np.array(dic[greater_extrema[j]])
-    #             seed_zyx = np.array(random.sample(seed_total, 3))
-    #             if len(seed_list) == 0:
-    #                 seed_list.append(ps.Seed(seed_zyx, less_extrema[i], less_extrema[i+1], index))
-    #                 last_seed_lower = less_extrema[i]
-    #             elif last_seed_lower != less_extrema[i]:
-    #                 seed_list.append(ps.Seed(seed_zyx, less_extrema[i], less_extrema[i+1], index))
-    #                 last_seed_lower = less_extrema[i]
-    #             continue
-    # return seed_list
+    index = 0
+    last_seed_lower = 0
+    for j in range(greater_extrema.size):
+        for i in range(less_extrema.size - 1):
+            if greater_extrema[j] < less_extrema[i]:
+                break
+            if less_extrema[i] < greater_extrema[j] < less_extrema[i + 1]:
+                index += 1
+                seed_total = np.array(dic[greater_extrema[j]])
+                # print greater_extrema[j],seed_total
+                seed_zyx = np.array(random.sample(seed_total, 3))
+                if len(seed_list) == 0:
+                    seed_list.append(ps.Seed(seed_zyx, less_extrema[i], less_extrema[i + 1], index))
+                    last_seed_lower = less_extrema[i]
+                elif last_seed_lower != less_extrema[i]:
+                    seed_list.append(ps.Seed(seed_zyx, less_extrema[i], less_extrema[i + 1], index))
+                    last_seed_lower = less_extrema[i]
+                continue
+    # save_data.write_txt("seeds",seed_list)
+    return seed_list
+
+
+def readseeds():
+    less_extrema = np.array(save_data.read_txt("min"))
+    greater_extrema = np.array(save_data.read_txt("max"))
+    seed_list = list()
+    return seed_list

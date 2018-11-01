@@ -6,6 +6,7 @@
 
 
 import numpy as np
+
 import point_and_seed as ps
 
 
@@ -79,6 +80,7 @@ def growwithedge(im_data, seed, grow_mark_all, im_edge):
             # 取3*3*3的超体素平均值进行生长计算
             else:
                 avg = cal_avg(im_data, tmpZ, tmpY, tmpX)
+            # print upper_extract,avg,lower_extract
             if upper_extract >= avg >= lower_extract \
                     and image_mark[tmpZ, tmpY, tmpX] == 0 \
                     and grow_mark_all[tmpZ, tmpY, tmpX]== 0\
@@ -91,16 +93,19 @@ def growwithedge(im_data, seed, grow_mark_all, im_edge):
 
 
 def isedge(point, grow_dir, im_edge):
+    [lenZ, lenY, lenX] = im_edge.shape
     pcurZ = point.z
     pcurY = point.y
     pcurX = point.x
     pnextZ = point.z + grow_dir.z
     pnextY = point.y + grow_dir.y
     pnextX = point.x + grow_dir.x
-    if im_edge[pcurZ, pcurY, pcurX] == 0:
+    if pcurX == 0 or pcurX == lenX - 1 or pcurY == 0 or pcurY == lenY - 1 or pcurZ == 0 or pcurZ == lenZ - 1:
+        return True
+    elif im_edge[pcurZ, pcurY, pcurX] == 0:
         return False
     else:
-        if im_edge[pnextZ, pnextY, pnextX] == 1:
+        if len(str(int(im_edge[pnextZ, pnextY, pnextX]))) == len(str(int(im_edge[pcurZ, pcurY, pcurX]))):
             return False
         else:
             return True
@@ -112,7 +117,9 @@ def cal_avg(im_data, z, y, x):  # 计算超体素像素值
     if z == 0 or y == 0 or x == 0 or z == lenZ - 1 or y == lenY - 1 or x == lenX - 1:
         avg = im_data[z, y, x]
     else:
-        avg = sum(im_data[z-1:z+1, y-1:y+1, x-1:x+1])/27
+        # print im_data[z-1:z+1, y-1:y+1, x-1:x+1]
+        # print sum(im_data[z-1:z+1, y-1:y+1, x-1:x+1])
+        avg = np.sum(im_data[z - 1:z + 1, y - 1:y + 1, x - 1:x + 1]) / 27
         # avg = (im_data[z - 1, y - 1, x - 1] + im_data[z - 1, y - 1, x] + im_data[z - 1, y - 1, x + 1] +
         #        im_data[z - 1, y, x - 1] + im_data[z - 1, y, x] + im_data[z - 1, y, x + 1] +
         #        im_data[z - 1, y + 1, x - 1] + im_data[z - 1, y + 1, x] + im_data[z - 1, y + 1, x + 1] +
@@ -123,6 +130,7 @@ def cal_avg(im_data, z, y, x):  # 计算超体素像素值
         #        im_data[z + 1, y, x - 1] + im_data[z + 1, y, x] + im_data[z + 1, y, x + 1] +
         #        im_data[z + 1, y + 1, x - 1] + im_data[z + 1, y + 1, x] + im_data[z + 1, y + 1, x + 1]
         #        )/27.0
+        # print avg
     return avg
 
 
